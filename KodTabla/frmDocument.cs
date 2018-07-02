@@ -28,16 +28,16 @@ namespace KodTabla
             InitializeComponent();
         }
 
-        public byte hex2byte(string hex)
+        public byte Hex2byte(string hex)
         {
             return byte.Parse(hex, System.Globalization.NumberStyles.HexNumber);
         }
 
-        public int hex2int(string hex)
+        public int Hex2int(string hex)
         {
             return int.Parse(hex, System.Globalization.NumberStyles.HexNumber);
         }
-        public string int2hex(int num)
+        public string Int2hex(int num)
         {
             return num.ToString("X2");
         }
@@ -52,7 +52,7 @@ namespace KodTabla
             fileErrorsNum++;
             AddMessage("Line:" +(lineNum + 1).ToString() + " - " + message);
         }
-        private string calcIntelChecksum(string data)
+        private string CalcIntelChecksum(string data)
         {
             int i = 0;
             string sum = "";
@@ -60,7 +60,7 @@ namespace KodTabla
             
             for ( i = 0; i < data.Length/2; i++ )
             {
-                datasum += hex2byte(data.Substring(i*2,2));
+                datasum += Hex2byte(data.Substring(i*2,2));
             }
 
             datasum = (byte)datasum & (byte)255;
@@ -71,7 +71,7 @@ namespace KodTabla
             sum = ( datasum ).ToString("X2") ;
             return sum;
         }
-        public void validateFileContent(string[] fc, bool fixing = false)
+        public void ValidateFileContent(string[] fc, bool fixing = false)
         {
             fileErrorsNum = 0;
             int lineNum = 0;
@@ -107,14 +107,14 @@ namespace KodTabla
                         // this line is behind EOL line!
                         AddError(lineNum, "row behind the end of line marking");
                     }
-                    int bytecount = hex2int(line.Substring(1, 2));
+                    int bytecount = Hex2int(line.Substring(1, 2));
                     if (line.Length != bytecount * 2 + 11)
                     {
                         // the given amount of data is incorrect
                         AddError(lineNum, "byte length does not match (given:" + (bytecount * 2).ToString() + ", found:" + (line.Length - 9).ToString() + ")");
                     }
                     string address = line.Substring(3, 4);
-                    int recordType = hex2int(line.Substring(7, 2));
+                    int recordType = Hex2int(line.Substring(7, 2));
                     string checkSum = line.Substring(9 + (bytecount * 2), 2);
                     string data = line.Substring(1, bytecount * 2 + 8);
                     if (recordType == 1)
@@ -134,7 +134,7 @@ namespace KodTabla
                     if (recordType == 0 || recordType == 4)
                     {
                         // Data type, calculate checksum!
-                        string calcedSum = calcIntelChecksum(data);
+                        string calcedSum = CalcIntelChecksum(data);
                         if (calcedSum != checkSum)
                         {
                             AddError(lineNum, "Checksum mismatch! calculated: " + calcedSum + " found:" + checkSum);
@@ -191,7 +191,7 @@ namespace KodTabla
         private string getdecvalue(int fpos, int pos, int len = 2)
         {
             // TODO: Error handling
-            return hex2int(fileContent[fpos].Substring(pos, len)).ToString();
+            return Hex2int(fileContent[fpos].Substring(pos, len)).ToString();
         }
 
         private position getProxyCodePos(int proxyNum, bool flatCode = true)
@@ -229,17 +229,20 @@ namespace KodTabla
 
             position pos = new position();
             proxyData pd = new proxyData();
-            pos = getProxyCodePos(0);
+/*            pos = getProxyCodePos(0);
             pos = getProxyCodePos(1);
             pos = getProxyCodePos(2);
             pos = getProxyCodePos(3);
             pos = getProxyCodePos(4);
             pos = getProxyCodePos(10);
-            pos = getProxyCodePos(25);
+            pos = getProxyCodePos(25);*/
             pos.line = 65;
             pos.column = 9; // start from here
             int j;
             string line = fileContent[pos.line];
+
+            dgProxyList.SelectAll();
+            dgProxyList.ClearSelection();
 
             for (int proxy = 0; proxy < 1024; proxy++)
             {
@@ -275,7 +278,7 @@ namespace KodTabla
                     pos.column = 9; // go back to the first data of the line
                 }
 
-                dgProxyList.Rows.Add((proxy + 1).ToString(), hex2int(pd.flat).ToString(), hex2int(pd.code).ToString());
+                dgProxyList.Rows.Add((proxy + 1).ToString(), Hex2int(pd.flat).ToString(), Hex2int(pd.code).ToString());
             } // for i
         }
         private void updateParametersOnControls()
@@ -339,7 +342,7 @@ namespace KodTabla
         private void updateByteParametersInFileContent(int fpos, int pos, int value, bool updateSum = true)
         {
             int padding = 6; // +6 because of line number padding
-            string newValue = int2hex(value);
+            string newValue = Int2hex(value);
             string newLine = fileContent[fpos].Substring(0, pos ) + newValue + fileContent[fpos].Substring(pos + 2);
             if (fileContent[fpos] != newLine)
             {
@@ -351,9 +354,9 @@ namespace KodTabla
                 // Update checksum as well
                 if (updateSum == true)
                 {
-                    int bytecount = hex2int(newLine.Substring(1, 2));
+                    int bytecount = Hex2int(newLine.Substring(1, 2));
                     string data = newLine.Substring(1, bytecount * 2 + 8);
-                    string newCheckSum = calcIntelChecksum(data);
+                    string newCheckSum = CalcIntelChecksum(data);
                     newLine = newLine.Substring(0, 1 + bytecount * 2 + 8) + newCheckSum;
                     rtbView.Select(rtbView.GetFirstCharIndexFromLine(fpos) + padding + 1 + bytecount*2 + 8, 2);
                     rtbView.SelectionColor = System.Drawing.Color.Red;
@@ -384,9 +387,9 @@ namespace KodTabla
 
         private string UpdateChecksumOnLine(int fpos, string newLine, int padding = 6)
         {
-            int bytecount = hex2int(newLine.Substring(1, 2));
+            int bytecount = Hex2int(newLine.Substring(1, 2));
             string data = newLine.Substring(1, bytecount * 2 + 8);
-            string newCheckSum = calcIntelChecksum(data);
+            string newCheckSum = CalcIntelChecksum(data);
             newLine = newLine.Substring(0, 1 + bytecount * 2 + 8) + newCheckSum;
             rtbView.Select(rtbView.GetFirstCharIndexFromLine(fpos) + padding + 1 + bytecount * 2 + 8, 2);
             rtbView.SelectionColor = System.Drawing.Color.Red;
@@ -401,7 +404,7 @@ namespace KodTabla
             if (fileName != null)
             {
                 fileContent = System.IO.File.ReadAllLines(fileName);
-                validateFileContent(fileContent);
+                ValidateFileContent(fileContent);
                 rtbView.Text = dumpToText(fileContent);
                 this.Text = fileName;
             }
@@ -411,12 +414,12 @@ namespace KodTabla
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
             // Validating button
-            validateFileContent(fileContent);
+            ValidateFileContent(fileContent);
         }
 
         private void btnFix_Click(object sender, EventArgs e)
         {
-            validateFileContent(fileContent, true);
+            ValidateFileContent(fileContent, true);
         }
 
         private void SaveDocument()
@@ -591,7 +594,7 @@ namespace KodTabla
                 
                 string new_value = dgFlatCodes.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
                 int n;
-                if (new_value == "FFFF" || int.TryParse(new_value, out n) == true )
+                if (new_value.ToUpper() == "FFFF" || int.TryParse(new_value, out n) == true )
                 {
                     if (new_value.Length != 4)
                     {
@@ -653,7 +656,7 @@ namespace KodTabla
                 importedFileContent = System.IO.File.ReadAllLines(dlg.FileName);
                 int CurrentFileErrosNum = fileErrorsNum; // Dirty hack. need better solution
                 fileErrorsNum = 0;
-                validateFileContent(importedFileContent);
+                ValidateFileContent(importedFileContent);
                 if (fileErrorsNum == 0)
                 {
                     // No errors in file, we can use it

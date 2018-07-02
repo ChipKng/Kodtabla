@@ -591,9 +591,9 @@
             this.Proxy,
             this.FlatTo,
             this.ProxyCode});
-            this.dgProxyList.Location = new System.Drawing.Point(728, 270);
+            this.dgProxyList.Location = new System.Drawing.Point(727, 270);
             this.dgProxyList.Name = "dgProxyList";
-            this.dgProxyList.Size = new System.Drawing.Size(367, 317);
+            this.dgProxyList.Size = new System.Drawing.Size(370, 317);
             this.dgProxyList.TabIndex = 8;
             // 
             // Proxy
