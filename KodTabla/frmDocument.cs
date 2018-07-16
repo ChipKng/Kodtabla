@@ -2,6 +2,7 @@
 using System.Text;
 using System.Windows.Forms;
 
+
 namespace KodTabla
 {
     public partial class frmDocument : Form
@@ -241,9 +242,6 @@ namespace KodTabla
             int j;
             string line = fileContent[pos.line];
 
-            dgProxyList.SelectAll();
-            dgProxyList.ClearSelection();
-
             for (int proxy = 0; proxy < 1024; proxy++)
             {
                 // FC....CCCCCC - structure: fc: flat code, C-code
@@ -279,6 +277,7 @@ namespace KodTabla
                 }
 
                 dgProxyList.Rows.Add((proxy + 1).ToString(), Hex2int(pd.flat).ToString(), Hex2int(pd.code).ToString());
+
             } // for i
         }
         private void updateParametersOnControls()
@@ -633,12 +632,50 @@ namespace KodTabla
 
         private void btnCopyFlatCodes_Click(object sender, EventArgs e)
         {
-            //dgFlatCodes.SelectedRows.CopyTo();
+            int rows = dgFlatCodes.SelectedRows.Count;
+            if (rows > 0)
+            {
+                Clipboard.Clear();
+                DataObject DoB = dgFlatCodes.GetClipboardContent();
+                if (DoB != null)
+                {
+                    Clipboard.SetDataObject(DoB);
+                    AddMessage(rows.ToString() + " rows flat codes copied to clipboard.");
+                }
+            }
         }
 
         private void btnPasteFlatCodes_Click(object sender, EventArgs e)
         {
+            try
+            { 
+                string s = Clipboard.GetText();
+                string[] lines = s.Split('\n');
 
+                int iRow = dgFlatCodes.CurrentCell.RowIndex;
+                DataGridViewCell oCell;
+                foreach (string line in lines)
+                {
+                    if (iRow < dgFlatCodes.RowCount && line.Length > 0)
+                    {
+                        string[] sCells = line.Split('\t');
+                        oCell = dgFlatCodes[1, iRow];
+                        oCell.Value = Convert.ChangeType(sCells[2].Replace("\r", ""), oCell.ValueType);
+                        iRow++;
+                        // TODO: update file data!
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                AddMessage(lines.Length.ToString() + " rows flat codes pasted from clipboard to row index:" + iRow.ToString());
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show("The data you pasted is in the wrong format for the cell");
+                return;
+            }
         }
 
         private void btnDeselectFlatCodes_Click(object sender, EventArgs e)
